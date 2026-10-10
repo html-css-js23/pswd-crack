@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIN Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            background-color: #1e1e1e;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-width: 320px;
+        }
+        .pin-display {
+            font-size: 100px;
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 10px;
+            margin: 20px 0;
+            color: #4da6ff;
+        }
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .btn-no {
+            background-color: #ff4d4d;
+            color: white;
+        }
+        .btn-yes {
+            background-color: #00cc66;
+            color: white;
+        }
+        .progress {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+        }
+        .reset-btn {
+            margin-top: 20px;
+            background: none;
+            border: 1px solid #444;
+            color: #888;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Try this PIN:</h2>
+        <div class="pin-display" id="pinDisplay">0000</div>
+        
+        <h3>Did it work?</h3>
+        <div class="buttons">
+            <button class="btn-no" onclick="nextPin()">No (Next)</button>
+            <button class="btn-yes" onclick="foundPin()">Yes!</button>
+        </div>
+
+        <div class="progress" id="progressText">Tested: 0 / 10000</div>
+        <button class="reset-btn" onclick="resetProgress()">Reset Progress</button>
+    </div>
+
+    <script>
+        // Top 20 most common 4-digit PINs based on data leaks
+        const commonPins = [
+            "1234", "1111", "0000", "1212", "7777", 
+            "1004", "2000", "4444", "2222", "6969", 
+            "9999", "3333", "5555", "6666", "1122", 
+            "1313", "8888", "4321", "2001", "1010"
+        ];
+
+        // Generate the full list of 10,000 PINs
+        let allPins = [...commonPins];
+        for (let i = 0; i <= 9999; i++) {
+            let pin = i.toString().padStart(4, '0');
+            if (!commonPins.includes(pin)) {
+                allPins.push(pin);
+            }
+        }
+
+        // Check local storage for saved progress, default to 0
+        let currentIndex = localStorage.getItem('savedPinIndex');
+        currentIndex = currentIndex ? parseInt(currentIndex) : 0;
+
+        const pinDisplay = document.getElementById('pinDisplay');
+        const progressText = document.getElementById('progressText');
+
+        function updateUI() {
+            if (currentIndex >= allPins.length) {
+                pinDisplay.innerText = "DONE";
+                pinDisplay.style.color = "#888";
+                progressText.innerText = "All 10,000 combinations tested.";
+                return;
+            }
+            
+            pinDisplay.innerText = allPins[currentIndex];
+            progressText.innerText = `Tested: ${currentIndex} / 10000`;
+        }
+
+        function nextPin() {
+            if (currentIndex < allPins.length) {
+                currentIndex++;
+                // Save progress to browser cache
+                localStorage.setItem('savedPinIndex', currentIndex);
+                updateUI();
+            }
+        }
+
+        function foundPin() {
+            alert(`Awesome! The correct PIN is ${allPins[currentIndex]}.`);
+        }
+
+        function resetProgress() {
+            if (confirm("Are you sure you want to start over from the beginning?")) {
+                currentIndex = 0;
+                localStorage.setItem('savedPinIndex', 0);
+                updateUI();
+            }
+        }
+
+        // Keyboard shortcut: Pressing Space or Enter triggers "No (Next)" for speed
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' || event.code === 'Enter') {
+                event.preventDefault(); // Prevent default scrolling
+                nextPin();
+            }
+        });
+
+        // Initialize the screen on load
+        updateUI();
+    </script>
+</body>
+</html>
